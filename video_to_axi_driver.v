@@ -3,7 +3,7 @@ module video_to_axi_driver #(
     parameter AXIS_DATA_WIDTH           = 24,       // AXI Stream 数据总线宽度，应与 DATA_WIDTH 匹配
     parameter AXIS_ADDR_WIDTH           = 32,       // AXI 地址总线宽度
     parameter BUFFER_DEPTH              = 1024      // 每个乒乓 Buffer 的深度，决定了可以缓存多少个像素 (根据视频尺寸调整)
-) (1
+) (
     input  clk,                      // 系统时钟
     input  rst_n,                    // 低电平有效的复位信号
 

@@ -55,9 +55,9 @@ module SimpleCNN #(
     input wire [BITWIDTH*IMAGE_HEIGHT*IMAGE_WIDTH*IMAGE_CHANNELS-1:0] input_image, // 输入图像数据
     input wire [BITWIDTH*CONV1_FILTER_SIZE*CONV1_FILTER_SIZE*IMAGE_CHANNELS*CONV1_OUTPUT_CHANNELS-1:0] conv1_weight, // 卷积层 1 权重
     input wire [BITWIDTH*CONV1_OUTPUT_CHANNELS-1:0] conv1_bias,                // 卷积层 1 偏置
-    input wire [BITWIDTH*((IMAGE_WIDTH-CONV1_FILTER_SIZE+1)/POOL1_KERNEL_SIZE)*((IMAGE_HEIGHT-CONV1_FILTER_SIZE+1)/POOL1_KERNEL_SIZE)*CONV1_OUTPUT_CHANNELS*FC1_OUTPUT_UNITS-1:0] fc1_weight, // 全连接层 1 权重
-    input wire [BITWIDTH*FC1_OUTPUT_UNITS-1:0] fc1_bias,                       // 全连接层 1 偏置
-    output reg [BITWIDTH*2*FC1_OUTPUT_UNITS-1:0] output_scores,                // 输出得分
+    input wire [2*BITWIDTH*((IMAGE_WIDTH-CONV1_FILTER_SIZE+1)/POOL1_KERNEL_SIZE)*((IMAGE_HEIGHT-CONV1_FILTER_SIZE+1)/POOL1_KERNEL_SIZE)*CONV1_OUTPUT_CHANNELS*FC1_OUTPUT_UNITS-1:0] fc1_weight, // 全连接层 1 权重
+    input wire [2*BITWIDTH*FC1_OUTPUT_UNITS-1:0] fc1_bias,                       // 全连接层 1 偏置
+    output reg [BITWIDTH*4*FC1_OUTPUT_UNITS-1:0] output_scores,                // 输出得分
     output reg output_valid                                                   // 输出有效信号
 );
 
@@ -92,7 +92,7 @@ module SimpleCNN #(
     wire [BITWIDTH*2 - 1:0] flatten_out_wire; // 展平层输出 (串行)
     wire flatten_valid_out;                   // 展平层输出 valid
 
-    wire [BITWIDTH*2*FC1_OUTPUT_UNITS-1:0] fc1_out_wire;                         // 全连接层 1 的输出
+    wire [BITWIDTH*4*FC1_OUTPUT_UNITS-1:0] fc1_out_wire;                         // 全连接层 1 的输出
     wire pc_out_done;
     wire fc_valid_out;
     reg [2:0] output_delay_counter; // 用于延迟输出的计数器
@@ -125,7 +125,7 @@ module SimpleCNN #(
 
     // 实例化 ReLU 激活函数
     Relu_activation #(
-        .BITWIDTH(BITWIDTH*2),                                                    // 位宽与卷积输出匹配
+        .BITWIDTH(BITWIDTH),                                                    // 位宽与卷积输出匹配
         .DATA_WIDTH(CONV1_OUT_WIDTH),
         .DATA_HEIGHT(CONV1_OUT_HEIGHT),
         .DATA_CHANNELS(CONV1_OUTPUT_CHANNELS),
@@ -163,9 +163,9 @@ module SimpleCNN #(
     ) flatten_inst (
         .clk(clk),
         .rst_n(rst_n),
-        .clken(clken && (state_reg == FLATTEN_PC)),  // 控制使能信号
+        .clken(clken),  // 控制使能信号
         .data_in(pool1_out_wire),                 // 来自池化层的输出
-        .data_in_valid(state_reg == FLATTEN_PC),          //输入数据有效
+        .data_in_valid(pool1_valid_out),          //输入数据有效
         .data_out(flatten_out_wire),              // 展平后的数据输出
         .data_out_valid(flatten_valid_out),       // 展平后的有效信号
         .done()
